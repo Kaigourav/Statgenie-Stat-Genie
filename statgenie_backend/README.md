@@ -39,7 +39,7 @@ statgenie_backend/
 
 ### 1. Clone & Install
 ```bash
-git clone <your_repo_url>
+git clone https://github.com/Kaigourav/Statgenie-Stat-Genie
 cd statgenie_backend
 pip install -r requirements.txt
 ```

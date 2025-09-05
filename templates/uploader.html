@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>StatGenie - Data Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .upload-box { border: 2px dashed #ccc; padding: 20px; text-align: center; margin: 20px 0; }
+        .result { margin-top: 20px; padding: 15px; border: 1px solid #ddd; display: none; white-space: pre-wrap; }
+        .btn { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; }
+        .btn:hover { background: #0056b3; }
+        .filter-box { margin: 15px 0; padding: 10px; border: 1px solid #ddd; }
+        label { font-weight: bold; display: block; margin: 8px 0 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 StatGenie Data Upload</h1>
+        
+        <div class="upload-box">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" name="file" 
+                       accept=".csv,.xls,.xlsx,.json,.txt,.pdf,.doc,.docx,.png,.jpg,.jpeg,.bmp,.tiff" 
+                       required>
+                <br><br>
+                <button type="submit" class="btn">Upload and Analyze</button>
+            </form>
+        </div>
+
+        <div id="loading" style="display: none;">
+            <h3>⏳ Processing your data... (This may take a minute)</h3>
+        </div>
+
+        <!-- Dynamic filter UI -->
+        <div id="filters" class="filter-box" style="display: none;">
+            <h3>🔎 Apply Filters</h3>
+            <form id="filterForm"></form>
+            <button type="button" class="btn" id="applyFiltersBtn">Apply Filters</button>
+        </div>
+
+        <div id="result" class="result"></div>
+        <div id="downloadBox" style="display: none; margin-top: 20px;">
+            <button class="btn" id="downloadBtn">⬇️ Download Full Report (PDF)</button>
+        </div>
+    </div>
+
+    <script>
+        let lastFilters = null;  
+        let cachedSlicers = null; 
+        let uploadedFile = null;
+        let jobId = null;  // NEW: Track job ID
+
+        // ========== Upload ==========
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            uploadedFile = e.target.file.files[0];
+            formData.append('file', uploadedFile);
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('downloadBox').style.display = 'none';
+            document.getElementById('filters').style.display = 'none';
+            
+            try {
+                const response = await fetch('/clean_and_analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                document.getElementById('loading').style.display = 'none';
+                
+                if (response.ok) {
+                    jobId = result.job_id;  // store job_id
+                    cachedSlicers = result.slicers;
+                    renderSlicers(cachedSlicers);
+                    document.getElementById('filters').style.display = 'block';
+                    document.getElementById('result').innerHTML = 
+                        `<h3>✅ Analysis Complete!</h3>
+                         <pre>${JSON.stringify(result, null, 2)}</pre>`;
+                    document.getElementById('downloadBox').style.display = 'block';
+                } else {
+                    document.getElementById('result').innerHTML = 
+                        `<h3>❌ Error</h3><p>${result.error}</p>`;
+                }
+                document.getElementById('result').style.display = 'block';
+                
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('result').innerHTML = 
+                    `<h3>❌ Network Error</h3><p>${error.message}</p>`;
+                document.getElementById('result').style.display = 'block';
+            }
+        });
+
+        // ========== Render slicers ==========
+        function renderSlicers(slicers) {
+            const form = document.getElementById('filterForm');
+            form.innerHTML = ''; // reset
+
+            for (const [col, config] of Object.entries(slicers)) {
+                let html = `<label>${col}</label>`;
+                if (config.type === "categorical") {
+                    html += `<select name="${col}" multiple size="4">` +
+                            config.options.map(o => `<option value="${o}">${o}</option>`).join("") +
+                            `</select>`;
+                } else if (config.type === "numeric") {
+                    html += `<input type="number" step="any" name="${col}_min" placeholder="min: ${config.min}"> - ` +
+                            `<input type="number" step="any" name="${col}_max" placeholder="max: ${config.max}">`;
+                } else if (config.type === "date") {
+                    html += `<input type="date" name="${col}_min"> - <input type="date" name="${col}_max">`;
+                }
+                form.innerHTML += html;
+            }
+        }
+
+        // ========== Apply filters ==========
+        document.getElementById('applyFiltersBtn').addEventListener('click', async () => {
+            const filters = {};
+            const form = new FormData(document.getElementById('filterForm'));
+            for (const [name, value] of form.entries()) {
+                if (!value) continue;
+                if (name.endsWith("_min") || name.endsWith("_max")) {
+                    const col = name.replace(/_(min|max)/, "");
+                    filters[col] = filters[col] || {};
+                    if (name.endsWith("_min")) filters[col].min = isNaN(value) ? value : parseFloat(value);
+                    if (name.endsWith("_max")) filters[col].max = isNaN(value) ? value : parseFloat(value);
+                } else {
+                    filters[name] = filters[name] || [];
+                    filters[name].push(value);
+                }
+            }
+            lastFilters = filters;
+
+            document.getElementById('loading').style.display = 'block';
+            try {
+                const response = await fetch('/filters', {
+                    method: 'POST',
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ job_id: jobId, filters })
+                });
+                const result = await response.json();
+                document.getElementById('loading').style.display = 'none';
+
+                if (response.ok) {
+                    document.getElementById('result').innerHTML =
+                        `<h3>✅ Filtered Analysis</h3>
+                         <pre>${JSON.stringify(result, null, 2)}</pre>`;
+                } else {
+                    document.getElementById('result').innerHTML =
+                        `<h3>❌ Error</h3><p>${result.error}</p>`;
+                }
+            } catch (err) {
+                document.getElementById('loading').style.display = 'none';
+                alert("❌ Error applying filters: " + err.message);
+            }
+        });
+
+        // ========== PDF download ==========
+        document.getElementById('downloadBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/download_report', {
+                    method: 'POST',
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ job_id: jobId, filters: lastFilters })
+                });
+
+                if (!response.ok) {
+                    alert("❌ Failed to generate PDF");
+                    return;
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "analysis_report.pdf";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+            } catch (err) {
+                alert("❌ Error: " + err.message);
+            }
+        });
+    </script>
+</body>
+</html>

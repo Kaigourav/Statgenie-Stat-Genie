@@ -1,0 +1,16 @@
+# Inherit dockerignore rules
+.dockerignore
+
+# Ignore git & editor configs
+.git
+.gitignore
+.idea/
+.vscode/
+
+# Ignore local files not needed in Cloud Run
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.log
+uploads/

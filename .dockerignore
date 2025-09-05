@@ -1,0 +1,30 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtualenvs
+venv/
+env/
+.venv/
+
+# Git & IDE files
+.git
+.gitignore
+.idea/
+.vscode/
+
+# Logs & temp files
+*.log
+*.tmp
+.DS_Store
+
+# Build outputs
+dist/
+build/
+
+# Uploaded/generated files
+uploads/
+*.pdf
+*.csv

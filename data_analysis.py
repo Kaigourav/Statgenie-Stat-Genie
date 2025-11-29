@@ -7,16 +7,13 @@ import plotly.express as px
 import plotly.io as pio
 import google.generativeai as genai
 from json_encoder import to_py
+from config import config
 
 # =======================
 # Gemini config
 # =======================
-api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    raise ValueError("❌ GEMINI_API_KEY not set. Please add it to your .env file.")
-
-genai.configure(api_key=api_key)
-gemini = genai.GenerativeModel("gemini-2.5-pro")
+genai.configure(api_key=config.GEMINI_API_KEY)
+gemini = genai.GenerativeModel(config.model.GEMINI_PRIMARY)
 
 # =======================
 # Helpers: summaries
@@ -61,7 +58,11 @@ def _detect_date_columns(df: pd.DataFrame) -> List[str]:
     for c in df.select_dtypes(include="object").columns:
         sample = df[c].dropna().head(20)
         try:
-            pd.to_datetime(sample, errors="raise")
+            # Suppress warnings for date format inference
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                pd.to_datetime(sample, errors="raise")
             date_cols.append(c)
         except Exception:
             continue
@@ -282,9 +283,11 @@ import random
 # =======================
 # Random Chart Suggestions
 # =======================
-def random_chart_suggestions(df: pd.DataFrame, max_charts: int = 6) -> List[Dict[str, Any]]:
+def random_chart_suggestions(df: pd.DataFrame, max_charts: int = None) -> List[Dict[str, Any]]:
     if df.empty:
         return []
+    
+    max_charts = max_charts or config.analysis.MAX_CHARTS
 
     num_cols = [c for c in df.select_dtypes(include=np.number).columns if "id" not in c.lower()]
     cat_cols = [c for c in df.select_dtypes(include="object").columns if "id" not in c.lower()]
@@ -374,7 +377,10 @@ def data_story(df: pd.DataFrame, report: dict) -> str:
     - Highlight risks, strengths, and potential opportunities.
     """
     try:
-        resp = gemini.generate_content(prompt, generation_config={"temperature": 0.6})
+        resp = gemini.generate_content(
+            prompt, 
+            generation_config={"temperature": config.model.TEMPERATURE}
+        )
         if resp.text and len(resp.text) > 50:
             return resp.text.strip()
     except:

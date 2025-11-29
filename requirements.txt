@@ -6,6 +6,11 @@ werkzeug>=2.3.0,<3.0
 # Data Processing
 pandas>=2.2.0,<3.0
 numpy>=1.26.0,<2.0
+scikit-learn>=1.3.0,<2.0
+scipy>=1.11.0,<2.0
+
+# Storage & Caching
+redis>=5.0.0,<6.0
 
 # Visualization & AI
 plotly>=6.1.1,<7.0
@@ -22,17 +27,16 @@ python-docx>=1.0.0,<2.0
 reportlab>=4.0.8,<5.0
 
 # PDF & OCR & table extraction (heavy)
-camelot-py[cv]>=0.11.0,<0.12.0
+camelot-py>=0.11.0,<0.12.0
 pdfplumber>=0.10.0,<0.11.0
 pytesseract>=0.3.10,<0.4.0
-opencv-python-headless>=4.8.0,<5.0
+opencv-python>=4.8.0,<5.0
+ghostscript>=0.7
 
 # Extras that may be useful for parsing / fonts / images
 Pillow>=10.0.0,<11.0
-python-magic>=0.4.27,<0.5.0
-
-# Optional but recommended for speed
-pyarrow>=12.0.1,<13.0
+python-magic-bin>=0.4.14; platform_system == "Windows"
+python-magic>=0.4.27; platform_system != "Windows"
 
 # Keep pip, setuptools modern
 pip>=23.0

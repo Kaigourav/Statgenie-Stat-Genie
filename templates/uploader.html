@@ -1,61 +1,540 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>StatGenie - Data Upload</title>
+    <title>StatGenie v3.6 - AI-Powered Data Analytics</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .upload-box { border: 2px dashed #ccc; padding: 20px; text-align: center; margin: 20px 0; }
-        .result { margin-top: 20px; padding: 15px; border: 1px solid #ddd; display: none; white-space: pre-wrap; }
-        .btn { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; }
-        .btn:hover { background: #0056b3; }
-        .filter-box { margin: 15px 0; padding: 10px; border: 1px solid #ddd; }
-        label { font-weight: bold; display: block; margin: 8px 0 4px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header .version {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: none;
+            transition: all 0.3s;
+            font-size: 1em;
+            font-weight: 500;
+        }
+        
+        .tab:hover {
+            background: #e9ecef;
+        }
+        
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid #667eea;
+            color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .upload-box { 
+            border: 3px dashed #dee2e6; 
+            padding: 40px; 
+            text-align: center; 
+            margin: 20px 0;
+            border-radius: 12px;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .upload-box:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .upload-box input[type="file"] {
+            display: none;
+        }
+        
+        .file-label {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1em;
+        }
+        
+        .file-label:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .file-name {
+            margin-top: 15px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .result { 
+            margin-top: 20px; 
+            padding: 20px; 
+            border: 1px solid #dee2e6; 
+            display: none; 
+            border-radius: 12px;
+            background: #f8f9fa;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .btn { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            cursor: pointer; 
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .btn:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+        
+        .filter-box { 
+            margin: 20px 0; 
+            padding: 20px; 
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            background: white;
+        }
+        
+        .filter-box h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
+        label { 
+            font-weight: 600; 
+            display: block; 
+            margin: 12px 0 6px;
+            color: #495057;
+        }
+        
+        input[type="number"], input[type="date"], select {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        select[multiple] {
+            min-height: 100px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .feature-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #28a745;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .error-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        
+        .storage-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 0.9em;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online { background: #28a745; }
+        .status-offline { background: #dc3545; }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8em; }
+            .tabs { flex-direction: column; }
+            .tab-content { padding: 15px; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 StatGenie Data Upload</h1>
+        <div class="header">
+            <h1>📊 StatGenie</h1>
+            <p class="version">AI-Powered Data Analytics Platform <span class="feature-badge">v3.6-dev</span></p>
+        </div>
         
-        <div class="upload-box">
-            <form id="uploadForm" enctype="multipart/form-data">
-                <input type="file" name="file" 
-                       accept=".csv,.xls,.xlsx,.json,.txt,.pdf,.doc,.docx,.png,.jpg,.jpeg,.bmp,.tiff" 
-                       required>
-                <br><br>
-                <button type="submit" class="btn">Upload and Analyze</button>
-            </form>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('upload')">📤 Upload & Analyze</button>
+            <button class="tab" onclick="switchTab('results')">📊 Results & Filters</button>
+            <button class="tab" onclick="switchTab('features')">✨ Features</button>
         </div>
+        
+        <!-- Upload Tab -->
+        <div id="uploadTab" class="tab-content active">
+            <div class="info-box">
+                <strong>🚀 Phase 1 Features Active:</strong> Advanced data cleaning, feature engineering, statistical analysis, persistent job storage, and AI-powered insights.
+            </div>
+            
+            <div class="upload-box">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <input type="file" id="fileInput" name="file" 
+                           accept=".csv,.xls,.xlsx,.json,.txt,.pdf,.doc,.docx,.png,.jpg,.jpeg,.bmp,.tiff" 
+                           required>
+                    <label for="fileInput" class="file-label">
+                        📁 Choose File
+                    </label>
+                    <div class="file-name" id="fileName">No file selected</div>
+                    <br><br>
+                    <button type="submit" class="btn">🔍 Analyze Data</button>
+                </form>
+            </div>
+            
+            <div id="uploadInfo" class="info-box">
+                <strong>Supported Formats:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Structured:</strong> CSV, Excel (.xls, .xlsx), JSON</li>
+                    <li><strong>Documents:</strong> PDF, Word (.doc, .docx), Text (.txt)</li>
+                    <li><strong>Images:</strong> PNG, JPG, JPEG, BMP, TIFF (OCR enabled)</li>
+                </ul>
+                <p style="margin-top: 10px;"><strong>Max size:</strong> 16 MB</p>
+            </div>
 
-        <div id="loading" style="display: none;">
-            <h3>⏳ Processing your data... (This may take a minute)</h3>
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <h3>⏳ Processing your data...</h3>
+                <p>Running AI-powered analysis pipeline</p>
+            </div>
         </div>
+        
+        <!-- Results Tab -->
+        <div id="resultsTab" class="tab-content">
+            <div id="statsGrid" class="stats-grid" style="display: none;"></div>
+            
+            <div id="filters" class="filter-box" style="display: none;">
+                <h3>🔎 Apply Dynamic Filters</h3>
+                <p style="color: #666; margin-bottom: 15px;">Filter your data to focus on specific segments</p>
+                <form id="filterForm"></form>
+                <div class="action-buttons">
+                    <button type="button" class="btn" id="applyFiltersBtn">Apply Filters</button>
+                    <button type="button" class="btn btn-secondary" id="clearFiltersBtn">Clear Filters</button>
+                </div>
+            </div>
 
-        <!-- Dynamic filter UI -->
-        <div id="filters" class="filter-box" style="display: none;">
-            <h3>🔎 Apply Filters</h3>
-            <form id="filterForm"></form>
-            <button type="button" class="btn" id="applyFiltersBtn">Apply Filters</button>
+            <div id="result" class="result"></div>
+            
+            <div id="downloadBox" class="action-buttons" style="display: none;">
+                <button class="btn" id="downloadBtn">📄 Download PDF Report</button>
+                <button class="btn btn-secondary" id="viewJobBtn">🔍 View Job Details</button>
+            </div>
         </div>
-
-        <div id="result" class="result"></div>
-        <div id="downloadBox" style="display: none; margin-top: 20px;">
-            <button class="btn" id="downloadBtn">⬇️ Download Full Report (PDF)</button>
+        
+        <!-- Features Tab -->
+        <div id="featuresTab" class="tab-content">
+            <h2 style="margin-bottom: 20px;">✨ Platform Capabilities</h2>
+            
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #667eea; margin-bottom: 10px;">🧹 Data Cleaning</h3>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li>Automatic missing value imputation (median/mode)</li>
+                    <li>Date format standardization</li>
+                    <li>Outlier detection and capping (IQR method)</li>
+                    <li>Type normalization</li>
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #667eea; margin-bottom: 10px;">🔧 Feature Engineering</h3>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li>Numeric scaling (Standard, MinMax, Robust)</li>
+                    <li>Categorical encoding (Label, One-Hot)</li>
+                    <li>Derived features (sum, mean, std, range)</li>
+                    <li>Feature importance analysis</li>
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #667eea; margin-bottom: 10px;">📊 Statistical Analysis</h3>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li>Correlation matrix (Pearson, Spearman)</li>
+                    <li>ANOVA tests (one-way)</li>
+                    <li>Chi-square tests of independence</li>
+                    <li>T-tests and normality checks</li>
+                    <li>Outlier summary reports</li>
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #667eea; margin-bottom: 10px;">📈 Visualization</h3>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li>Interactive Plotly charts (bar, scatter, line, pie, etc.)</li>
+                    <li>Correlation heatmaps</li>
+                    <li>Distribution plots (histogram, box, violin)</li>
+                    <li>Trend analysis with trendlines</li>
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #667eea; margin-bottom: 10px;">🤖 AI Features</h3>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li>AI-generated data narratives (Gemini 2.0)</li>
+                    <li>Automated KPI extraction</li>
+                    <li>Business insights and recommendations</li>
+                    <li>Intelligent chart suggestions</li>
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+                <h3 style="color: #667eea; margin-bottom: 10px;">💾 Storage & Performance</h3>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li>Redis-backed job persistence</li>
+                    <li>Automatic data compression</li>
+                    <li>TTL-based job expiration</li>
+                    <li>Graceful fallback to in-memory storage</li>
+                </ul>
+            </div>
         </div>
+    </div>
+    
+    <div class="storage-status" id="storageStatus">
+        <span class="status-indicator status-offline"></span>
+        <span>Checking system status...</span>
     </div>
 
     <script>
         let lastFilters = null;  
         let cachedSlicers = null; 
         let uploadedFile = null;
-        let jobId = null;  // NEW: Track job ID
-
+        let jobId = null;
+        let analysisData = null;
+        
+        // ========== Tab Switching ==========
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            if (tabName === 'upload') {
+                document.getElementById('uploadTab').classList.add('active');
+                document.querySelectorAll('.tab')[0].classList.add('active');
+            } else if (tabName === 'results') {
+                document.getElementById('resultsTab').classList.add('active');
+                document.querySelectorAll('.tab')[1].classList.add('active');
+            } else if (tabName === 'features') {
+                document.getElementById('featuresTab').classList.add('active');
+                document.querySelectorAll('.tab')[2].classList.add('active');
+            }
+        }
+        
+        // ========== File Input Handler ==========
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('fileName').textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            }
+        });
+        
+        // ========== Check System Health ==========
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                const statusEl = document.getElementById('storageStatus');
+                
+                if (response.ok) {
+                    const usingRedis = data.storage?.using_redis || false;
+                    statusEl.innerHTML = `
+                        <span class="status-indicator status-online"></span>
+                        <span>System Online | Storage: ${usingRedis ? 'Redis' : 'In-Memory'}</span>
+                    `;
+                } else {
+                    statusEl.innerHTML = `
+                        <span class="status-indicator status-offline"></span>
+                        <span>System Error</span>
+                    `;
+                }
+            } catch (error) {
+                const statusEl = document.getElementById('storageStatus');
+                statusEl.innerHTML = `
+                    <span class="status-indicator status-offline"></span>
+                    <span>Cannot reach server</span>
+                `;
+            }
+        }
+        
+        checkHealth();
+        setInterval(checkHealth, 30000);
+        
         // ========== Upload ==========
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const formData = new FormData();
-            uploadedFile = e.target.file.files[0];
+            uploadedFile = document.getElementById('fileInput').files[0];
             formData.append('file', uploadedFile);
             
             document.getElementById('loading').style.display = 'block';
@@ -73,32 +552,79 @@
                 document.getElementById('loading').style.display = 'none';
                 
                 if (response.ok) {
-                    jobId = result.job_id;  // store job_id
+                    jobId = result.job_id;
+                    analysisData = result;
                     cachedSlicers = result.slicers;
+                    
+                    const successBox = document.createElement('div');
+                    successBox.className = 'success-box';
+                    successBox.innerHTML = `
+                        <h3>✅ Analysis Complete!</h3>
+                        <p><strong>Job ID:</strong> ${jobId}</p>
+                        <p><strong>Dataset:</strong> ${result.shape?.rows || 0} rows × ${result.shape?.columns || 0} columns</p>
+                    `;
+                    document.getElementById('result').innerHTML = '';
+                    document.getElementById('result').appendChild(successBox);
+                    document.getElementById('result').style.display = 'block';
+                    
+                    displayStats(result);
                     renderSlicers(cachedSlicers);
                     document.getElementById('filters').style.display = 'block';
-                    document.getElementById('result').innerHTML = 
-                        `<h3>✅ Analysis Complete!</h3>
-                         <pre>${JSON.stringify(result, null, 2)}</pre>`;
-                    document.getElementById('downloadBox').style.display = 'block';
+                    document.getElementById('downloadBox').style.display = 'flex';
+                    
+                    switchTab('results');
+                    
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.innerHTML = `
+                        <h3 style="margin-top: 20px;">📊 Analysis Summary</h3>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    document.getElementById('result').appendChild(detailsDiv);
                 } else {
-                    document.getElementById('result').innerHTML = 
-                        `<h3>❌ Error</h3><p>${result.error}</p>`;
+                    const errorBox = document.createElement('div');
+                    errorBox.className = 'error-box';
+                    errorBox.innerHTML = `<h3>❌ Error</h3><p>${result.error || 'Unknown error'}</p>`;
+                    document.getElementById('result').innerHTML = '';
+                    document.getElementById('result').appendChild(errorBox);
+                    document.getElementById('result').style.display = 'block';
                 }
-                document.getElementById('result').style.display = 'block';
                 
             } catch (error) {
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('result').innerHTML = 
-                    `<h3>❌ Network Error</h3><p>${error.message}</p>`;
+                const errorBox = document.createElement('div');
+                errorBox.className = 'error-box';
+                errorBox.innerHTML = `<h3>❌ Network Error</h3><p>${error.message}</p>`;
+                document.getElementById('result').innerHTML = '';
+                document.getElementById('result').appendChild(errorBox);
                 document.getElementById('result').style.display = 'block';
             }
         });
+        
+        // ========== Display Stats ==========
+        function displayStats(data) {
+            const statsGrid = document.getElementById('statsGrid');
+            if (!data.kpis || data.kpis.length === 0) {
+                statsGrid.style.display = 'none';
+                return;
+            }
+            
+            statsGrid.innerHTML = '';
+            data.kpis.slice(0, 6).forEach(kpi => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="value">${kpi.value}</div>
+                    <div class="label">${kpi.name}</div>
+                `;
+                statsGrid.appendChild(card);
+            });
+            statsGrid.style.display = 'grid';
+        }
 
         // ========== Render slicers ==========
         function renderSlicers(slicers) {
             const form = document.getElementById('filterForm');
-            form.innerHTML = ''; // reset
+            form.innerHTML = '';
 
             for (const [col, config] of Object.entries(slicers)) {
                 let html = `<label>${col}</label>`;
@@ -145,16 +671,79 @@
                 document.getElementById('loading').style.display = 'none';
 
                 if (response.ok) {
-                    document.getElementById('result').innerHTML =
-                        `<h3>✅ Filtered Analysis</h3>
-                         <pre>${JSON.stringify(result, null, 2)}</pre>`;
+                    analysisData = result;
+                    
+                    const successBox = document.createElement('div');
+                    successBox.className = 'success-box';
+                    successBox.innerHTML = `
+                        <h3>✅ Filters Applied!</h3>
+                        <p><strong>Filtered Dataset:</strong> ${result.shape?.rows || 0} rows × ${result.shape?.columns || 0} columns</p>
+                    `;
+                    document.getElementById('result').innerHTML = '';
+                    document.getElementById('result').appendChild(successBox);
+                    
+                    displayStats(result);
+                    
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.innerHTML = `
+                        <h3 style="margin-top: 20px;">📊 Filtered Analysis</h3>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    document.getElementById('result').appendChild(detailsDiv);
                 } else {
-                    document.getElementById('result').innerHTML =
-                        `<h3>❌ Error</h3><p>${result.error}</p>`;
+                    const errorBox = document.createElement('div');
+                    errorBox.className = 'error-box';
+                    const errorMsg = result.message || result.error || 'Filter failed';
+                    const errorDetails = result.reason ? `<br><small>${result.reason}</small>` : '';
+                    errorBox.innerHTML = `
+                        <h3>❌ Error</h3>
+                        <p>${errorMsg}${errorDetails}</p>
+                        ${result.message?.includes('expired') ? '<p><strong>💡 Tip:</strong> Switch to the Upload tab and upload your file again.</p>' : ''}
+                    `;
+                    document.getElementById('result').innerHTML = '';
+                    document.getElementById('result').appendChild(errorBox);
                 }
             } catch (err) {
                 document.getElementById('loading').style.display = 'none';
-                alert("❌ Error applying filters: " + err.message);
+                const errorBox = document.createElement('div');
+                errorBox.className = 'error-box';
+                errorBox.innerHTML = `<h3>❌ Network Error</h3><p>${err.message}</p>`;
+                document.getElementById('result').innerHTML = '';
+                document.getElementById('result').appendChild(errorBox);
+            }
+        });
+        
+        // ========== Clear Filters ==========
+        document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+            document.getElementById('filterForm').reset();
+            lastFilters = null;
+            if (jobId && analysisData) {
+                displayStats(analysisData);
+                const infoBox = document.createElement('div');
+                infoBox.className = 'info-box';
+                infoBox.innerHTML = '<p>Filters cleared. Showing full dataset.</p>';
+                document.getElementById('result').innerHTML = '';
+                document.getElementById('result').appendChild(infoBox);
+            }
+        });
+        
+        // ========== View Job Details ==========
+        document.getElementById('viewJobBtn').addEventListener('click', () => {
+            if (analysisData) {
+                const modal = document.createElement('div');
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;';
+                modal.innerHTML = `
+                    <div style="background: white; padding: 30px; border-radius: 12px; max-width: 800px; max-height: 80vh; overflow-y: auto;">
+                        <h2>Job Details</h2>
+                        <p><strong>Job ID:</strong> ${jobId}</p>
+                        <pre>${JSON.stringify(analysisData, null, 2)}</pre>
+                        <button class="btn" onclick="this.parentElement.parentElement.remove()">Close</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.remove();
+                });
             }
         });
 

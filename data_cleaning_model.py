@@ -3,12 +3,10 @@ import numpy as np
 import pandas as pd
 import google.generativeai as genai
 from typing import Tuple, Dict, Any
+from config import config
 
-# Configure Gemini key (prefer ENV)
-api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    raise ValueError("❌ GEMINI_API_KEY not set. Please add it to your .env file.")
-genai.configure(api_key=api_key)
+# Configure Gemini
+genai.configure(api_key=config.GEMINI_API_KEY)
 
 class DataCleaningModel:
     """
